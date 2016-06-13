@@ -9,38 +9,20 @@ firebase.initializeApp(config);
 
 var database = firebase.database();
 
-
 function recordScore(score){
-    var ref = database.ref('scores').push(); 
-    ref.set(score);
-    recordTopTen(score);
+    var ref = database.ref('scores').push(score); 
 }
 
-var topten = null;
-var toptenReceived = false;
-database.ref('topten').once('value').then(function(snapshot){
-    topten = snapshot.val();
-    toptenReceived = true;
-});
+function registerForNLowestScores(n, callback){
+    var dataset = database.ref('scores').orderByChild('score').limitToFirst(n);
 
-function recordTopTen(score){
-    if (!toptenReceived) return;
-    if (topten == null) topten = [];
-    topten.push(score);
-    topten.sort(function(a, b){return a.score-b.score});
-    topten = topten.slice(0,10);
-    if (topten.includes(score))
-    {
-        var ref = database.ref('topten'); 
-        ref.set(topten);
-    }
-}
-
-function registerForTopTen(callback){
-    database.ref('topten').on('value', function(snapshot) {
-        var topten = snapshot.val();
-        if (topten != null) topten.sort(function(a, b){return a.score-b.score});
-        callback(topten);
+    dataset.on('value', function(snapshot) {
+        var topScores = snapshot.val();
+        callback(topScores);
     });  
 }
 
+// TODO: remove this function and use registerForNLowestScores directly
+function registerForTopTen(callback){
+    registerForNLowestScores(2, callback);
+}
