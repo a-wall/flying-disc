@@ -9,36 +9,38 @@ firebase.initializeApp(config);
 
 var database = firebase.database();
 
-database.ref('/').on('value', function(snapshot) {
-    console.log(snapshot.val());
-});
-
-function postScore(player, score) {
-    var scoreData = {
-        player: player,
-        score: score
-    };
-
-    var newKey = database.ref().child('scores').push().key;
-
-    var updates = {};
-    updates['/scores/' + newKey] = scoreData;
-
-    return firebase.database().ref().update(updates);
-}
 
 function recordScore(score){
+    var ref = database.ref('scores').push(); 
+    ref.set(score);
+    recordTopTen(score);
+}
 
+var topten = null;
+var toptenReceived = false;
+database.ref('topten').once('value').then(function(snapshot){
+    topten = snapshot.val();
+    toptenReceived = true;
+});
+
+function recordTopTen(score){
+    if (!toptenReceived) return;
+    if (topten == null) topten = [];
+    topten.push(score);
+    topten.sort(function(a, b){return a.score-b.score});
+    topten = topten.slice(0,10);
+    if (topten.includes(score))
+    {
+        var ref = database.ref('topten'); 
+        ref.set(topten);
+    }
 }
 
 function registerForTopTen(callback){
-    var scores = [
-        {
-            name : "BOB",
-            holes : [3,3,3,3,3,4,4,5,1],
-            score : 29,
-            timestamp : new Date()
-        }
-    ];
-    callback(scores);
+    database.ref('topten').on('value', function(snapshot) {
+        var topten = snapshot.val();
+        if (topten != null) topten.sort(function(a, b){return a.score-b.score});
+        callback(topten);
+    });  
 }
+
