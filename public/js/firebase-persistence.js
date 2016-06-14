@@ -13,16 +13,28 @@ function recordScore(score){
     var ref = database.ref('scores').push(score); 
 }
 
-function registerForNLowestScores(n, callback){
+function registerForNLowestScores(n, callbackAdded, callbackRemoved){
     var dataset = database.ref('scores').orderByChild('score').limitToFirst(n);
 
-    dataset.on('value', function(snapshot) {
-        var topScores = snapshot.val();
-        callback(topScores);
+    dataset.on('child_added', function(data, prevChildKey) {
+        var score = data.val();
+        callbackAdded(score, data.key, prevChildKey);
     });  
+
+    dataset.on('child_removed', function(data) {
+        var score = data.val();
+        callbackRemoved(score, data.key);
+    }); 
 }
 
-// TODO: remove this function and use registerForNLowestScores directly
-function registerForTopTen(callback){
-    registerForNLowestScores(2, callback);
-}
+registerForNLowestScores(2, 
+    function(score, key, previousKey) { 
+        console.log(score); 
+        console.log('added: ' + key);
+        console.log('prev: ' + previousKey);
+    },
+    function(score, key) { 
+        console.log(score); 
+        console.log('removed: ' + key);
+    }
+);
