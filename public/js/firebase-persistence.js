@@ -26,15 +26,3 @@ function registerForNLowestScores(n, callbackAdded, callbackRemoved){
         callbackRemoved(score, data.key);
     }); 
 }
-
-registerForNLowestScores(2, 
-    function(score, key, previousKey) { 
-        console.log(score); 
-        console.log('added: ' + key);
-        console.log('prev: ' + previousKey);
-    },
-    function(score, key) { 
-        console.log(score); 
-        console.log('removed: ' + key);
-    }
-);

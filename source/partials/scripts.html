@@ -1,6 +1,6 @@
 <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
-<script src="//maps.googleapis.com/maps/api/js?v=3&amp;sensor=false&amp;key=AIzaSyClJ3Ur6zCQQWPtpkHi5WmEx8QWfrI1cgE"></script>
+<script src="//maps.googleapis.com/maps/api/js?v=3&amp;key=AIzaSyClJ3Ur6zCQQWPtpkHi5WmEx8QWfrI1cgE"></script>
 <script src="js/firebase-persistence.js"></script>
 <script>
     /*
@@ -24,25 +24,123 @@
             postScore(player.value, score.value);
         }
     }*/
-    var holeFields = $("#scorecard").find("[name^='hole']");
-    $("#scorecard").on("blur","[name^='hole']",function(){
+    //var holeFields = $("#scorecard").find("[name^='hole']");
+    function addPlayer(){
+        var table = $("#scorecard").find("tbody"),
+            newPlayerNumber = table.find("tr").length + 1,
+            html = "";
+        html += '<tr><td><input id="player' + newPlayerNumber + '" type="text" aria-labelledby="player-label" maxlength="3" name="player-name' + newPlayerNumber + '"></td>';
+        for(var i = 1;i<=9;i++){
+            html += '<td><input type="number" min="1" max="9" aria-labelledby="player' + newPlayerNumber + ' hole-label hole' + i +'" name="hole' + i +'-' + newPlayerNumber + '"></td>'
+        }
+        html += '<td><input type="number" min="9" max="81" aria-labelledby="player' + newPlayerNumber + ' total" readonly name="total-' + newPlayerNumber + '"></td>';
+        table.append(html);
+    }
+
+    function tintScore(el,score){
+        score = parseInt(score,10);
+        if(score < 3){
+            el.removeClass("over-par");
+            el.addClass("under-par");
+        }
+        else if(score > 3){
+            el.removeClass("under-par");
+            el.addClass("over-par");
+        }
+        else{
+            el.removeClass("over-par");
+            el.removeClass("under-par");
+        }
+    }
+
+    function totalScore(el){
+        var score = 0,
+            pattern = /\d/,
+            row = el.parents("tr"),
+            holeFields = row.find("[name^='hole']"),
+            totalField = row.find("[name^='total']"),
+            thisVal;
+        holeFields.each(function(){
+            thisVal = $(this).val();
+            if(thisVal.match(pattern)){
+                score += parseInt(thisVal,10);
+            }
+        })
+        if(score > 0){
+            totalField.val(score);
+        }
+    }
+
+    $("#scorecard").on("keyup","[name^='hole']",function(){
         var thisScore = $(this).val();
         if(thisScore !== ""){
-            thisScore = parseInt(thisScore,10);
-            if(thisScore < 3){
-                $(this).removeClass("over-par");
-                $(this).addClass("under-par");
-            }
-            else if(thisScore > 3){
-                $(this).removeClass("under-par");
-                $(this).addClass("over-par");
-            }
-            else{
-                $(this).removeClass("over-par");
-                $(this).removeClass("under-par");
+            tintScore($(this),thisScore);
+        }
+        totalScore($(this));
+    });
+
+    function generateScoreTable(jsonData){
+        var html = '<h2>Best Scores</h2><table class="score-table"><thead><tr><th></th><th colspan="9">Holes</th><th></th><tr><th>Player</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>Total</th></tr><tbody>',
+            thisResult;
+        for (var prop in jsonData) {
+            if (jsonData.hasOwnProperty(prop)) {
+                thisResult = jsonData[prop];
+                html += '<tr><td>' + thisResult.name + '</td>';
+                for(var j = 0;j<thisResult.holes.length;j++){
+                    html += '<td>' + thisResult.holes[j] + '</td>';
+                }
+                html += '<td>' + thisResult.score + '</td></tr>';
             }
         }
+        html += '</tbody></table>';
+        $("#top-scores").append(html);
+    }
 
+    function submitScores(){
+        var player,
+            holes = [],
+            total;
+        $("#scorecard").find("tbody").find("tr").each(function(){
+            player = $(this).find("[name^='player']").val();
+            total = $(this).find("[name^='total']").val();
+            $(this).find("[name^='hole']").each(function(){
+                holes.push($(this).val());
+            });
+        });
+    }
+
+    function addBestScore(score, key, previousKey){
+        console.log(score); 
+        console.log('added: ' + key);
+        console.log('prev: ' + previousKey);
+        var tableBody = $("#score-table-body"),
+            newRow = "";
+        newRow = '<tr id="' + key + '"><td>' + score.name + '</td>';
+        for(var j = 0;j<score.holes.length;j++){
+            newRow += '<td>' + score.holes[j] + '</td>';
+        }
+        newRow += '<td>' + score.score + '</td></tr>';
+        if(previousKey){
+            $("#" + previousKey).after(newRow);
+        }
+        else{
+            tableBody.prepend(newRow);
+        }
+    }
+
+    function removeBestScore(score, key){
+        $("#" + key).remove();
+    }
+    
+    registerForNLowestScores(2, addBestScore, removeBestScore);
+
+    $("#add-player").on("click", function(){
+        addPlayer();
+    });
+    // The following needs to be replaced with a validation process which enables the button once the fields are filled
+    $("#submit-scores").prop('disabled', false);
+    $("#submit-scores").on("click", function(){
+        submitScores();
     });
 </script>
 <script>
@@ -115,6 +213,7 @@
             streetViewControl: false,
             rotateControl: false,
             fullscreenControl: false,
+            scrollWheel: false,
             mapTypeId: google.maps.MapTypeId.SATELLITE
         });
         for (var i = 0; i < golfHoles.length; i++) {
@@ -135,10 +234,4 @@
     google.maps.event.addDomListener(window, "resize", function() {
         map.fitBounds(latlngbounds);
     });
-
-    function generateScoreTable(jsonData){
-        var scoreString = JSON.stringify(jsonData);
-        $("#scores-section").find("h2").first().after("<p>" + scoreString + "</p>");
-    }
-    registerForTopTen(generateScoreTable);
 </script>

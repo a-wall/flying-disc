@@ -369,7 +369,11 @@ textarea {
 
 html {
   background: #FFF url("images/grid.png") repeat 0 0;
-  font-family: Roboto, Arial, sans-serif; }
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 87.5%;
+  font-weight: 400;
+  line-height: 1.42857;
+  color: #212121; }
 
 main {
   background-color: #009688; }
@@ -429,13 +433,46 @@ main {
 #player {
   text-transform: uppercase; }
 
-h2 {
-  font-family: 'Roboto Slab';
-  font-weight: 700; }
+table {
+  border-collapse: collapse;
+  width: 100%; }
+
+th {
+  font-weight: 500;
+  font-size: 0.857em; }
+
+td {
+  font-size: 0.928em; }
+
+#scorecard th {
+  padding: 0; }
+
+#scorecard td {
+  padding: 0 0 0.5em;
+  border: 0;
+  /*1px solid #B6B6B6;*/ }
+
+.score-table tr {
+  border-bottom: 1px solid #EEE; }
+
+.score-table thead tr:first-child {
+  border-bottom: 0; }
+
+.score-table thead tr:first-child th {
+  text-align: center;
+  padding: 0; }
+
+.score-table th, .score-table td {
+  text-align: right;
+  padding: 0.5em; }
+
+.score-table th:first-child, .score-table td:first-child {
+  text-align: left; }
 
 section {
   padding: 1em;
-  background-color: #FFF; }
+  background-color: #FFF;
+  overflow: hidden; }
 
 #map-container {
   height: 400px; }
@@ -450,17 +487,19 @@ col.player-name {
 col.total {
   width: 14.2857%; }
 
-#scorecard td {
-  padding: 0 0 0.5em;
-  border: 0;
-  /*1px solid #B6B6B6;*/ }
+#player-label {
+  text-align: left; }
 
 #scorecard input {
   border: 1px solid #B6B6B6;
-  width: 100%; }
+  width: 100%;
+  box-shadow: none; }
 
 #scorecard input:focus {
-  box-shadow: inset 0 0 0.25em #B6B6B6; }
+  /*box-shadow: inset 0 0 0.25em #B6B6B6;*/
+  outline: none;
+  outline: 1px solid #009688;
+  outline-offset: -1px; }
 
 #scorecard input[type="number"] {
   -moz-appearance: textfield;
@@ -485,4 +524,41 @@ header {
   padding: 1em; }
 
 h1 {
+  font-weight: 400;
+  font-size: 3.214em;
+  line-height: 1.0666;
   margin: 0; }
+
+h2 {
+  font-family: 'Roboto Slab';
+  font-weight: 700;
+  font-size: 2.428em;
+  line-height: 1.1764; }
+
+h3 {
+  font-weight: 400;
+  font-size: 1.714em;
+  line-height: 1.333; }
+
+button {
+  font-weight: 500;
+  text-transform: uppercase;
+  border: 0;
+  border-radius: 2px;
+  padding: 0.571em 1.142em;
+  box-shadow: rgba(0, 0, 0, 0.117647) 0px 1px 6px, rgba(0, 0, 0, 0.117647) 0px 1px 4px; }
+
+#add-player {
+  background-color: #FFF;
+  color: #009688; }
+
+#submit-scores {
+  background-color: #009688;
+  color: #FFF;
+  float: right;
+  margin-top: 0.5em; }
+
+#submit-scores:disabled {
+  color: rgba(0, 0, 0, 0.298039);
+  background-color: #e5e5e5;
+  box-shadow: none; }
