@@ -573,12 +573,14 @@ col.total {
   border: 1px solid #B6B6B6;
   width: 100%;
   box-shadow: none;
+  border-radius: 0;
 }
 #scorecard input:focus {
-  /*box-shadow: inset 0 0 0.25em #B6B6B6;*/
   outline: none;
+  /*box-shadow: inset 0 0 0.25em #B6B6B6;
   outline: 1px solid $primary-color;
-  outline-offset: -1px;
+  outline-offset: -1px;*/
+  border: 1px solid $primary-color;
 }
 #scorecard input[type="number"] {
     -moz-appearance: textfield; /*number-input;*/
@@ -589,6 +591,12 @@ col.total {
 #scorecard input[type='number']::-webkit-outer-spin-button { 
   -webkit-appearance: none; 
   margin: 0; 
+}
+
+#scorecard input.invalid {
+  /*outline: 1px solid $accent-color;
+  outline-offset: -1px;*/
+  border: 1px solid $accent-color;
 }
 
 .over-par {

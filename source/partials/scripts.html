@@ -4,44 +4,17 @@
 <script src="js/firebase-persistence.js"></script>
 <script>
     window.onerror = function (msg, url, lineNo, columnNo, error) {
-        var string = msg.toLowerCase();
-        var substring = "script error";
-        if (string.indexOf(substring) > -1){
-            alert('Script Error: See Browser Console for Detail');
-        } else {
-            alert(msg, url, lineNo, columnNo, error);
-        }
+        alert(msg, url, lineNo, columnNo, error);
       return false;
     };
-    /*
-    var scoreForm = document.getElementById('score-form');
-    if (scoreForm.addEventListener) {
-        scoreForm.addEventListener('submit', submitScore, false); 
-    } else if (scoreForm.attachEvent)  {
-        scoreForm.attachEvent('onsubmit', submitScore);
-    }
-    function validateScore(){
-        return true;
-    }
-    function validatePlayer(){
-        return true;
-    }
-    function submitScore(e){
-        var player = document.getElementById('player'),
-            score = document.getElementById('score')
-        e.preventDefault();
-        if(validateScore && validatePlayer){
-            postScore(player.value, score.value);
-        }
-    }*/
-    //var holeFields = $("#scorecard").find("[name^='hole']");
+
     function addPlayer(){
         var table = $("#scorecard").find("tbody"),
             newPlayerNumber = table.find("tr").length + 1,
             html = "";
         html += '<tr><td><input id="player' + newPlayerNumber + '" type="text" aria-labelledby="player-label" maxlength="3" name="player-name' + newPlayerNumber + '"></td>';
         for(var i = 1;i<=9;i++){
-            html += '<td><input type="number" min="1" max="9" aria-labelledby="player' + newPlayerNumber + ' hole-label hole' + i +'" name="hole' + i +'-' + newPlayerNumber + '"></td>'
+            html += '<td><input type="number" min="1" max="9" aria-labelledby="player' + newPlayerNumber + ' hole-label hole' + i +'" name="hole' + i +'-' + newPlayerNumber + '"></td>';
         }
         html += '<td><input type="number" min="9" max="81" aria-labelledby="player' + newPlayerNumber + ' total" readonly name="total-' + newPlayerNumber + '"></td>';
         table.append(html);
@@ -75,11 +48,84 @@
             if(thisVal.match(pattern)){
                 score += parseInt(thisVal,10);
             }
-        })
+        });
         if(score > 0){
             totalField.val(score);
         }
     }
+
+    function validPlayer(el){
+        var pattern = /.+/;
+        return validateField(el,pattern);
+    }
+
+    function validHole(el){
+        var pattern = /^\d{1}$/;
+        return validateField(el,pattern);
+    }
+
+    function validTotal(el){
+        var pattern = /^\d{1,2}$/;
+        return validateField(el,pattern);
+    }
+
+    function validateField(el,pattern){
+        var match,
+            val = el.val();
+        if(typeof val !== "undefined"){
+            match = val.match(pattern);
+            match ? el.removeClass("invalid") : el.addClass("invalid");
+        }
+        else{
+            match = null;
+        }
+        return match;
+    }
+
+    function submitScores(){
+        $("#scorecard").find("tbody").find("tr").each(function(){
+            var player,
+                total,
+                valid = true,
+                score = {
+                    holes : []
+                };
+            player = $(this).find("[name^='player']");
+            validPlayer(player) ? score.name = player.val() : valid = false;
+            total = $(this).find("[name^='total']");
+            validTotal(total) ? score.score = total.val() : valid = false;
+            $(this).find("[name^='hole']").each(function(){
+                validHole($(this)) ? score.holes.push($(this).val()) : valid = false;
+            });
+            if(valid){
+                recordScore(score);
+            }
+        });
+    }
+
+    function addBestScore(score, key, previousKey){
+        var tableBody = $("#score-table-body"),
+            newRow = '<tr id="' + key + '"><td>' + score.name + '</td>';
+        for(var i = 0;i<score.holes.length;i++){
+            newRow += '<td>' + score.holes[i] + '</td>';
+        }
+        newRow += '<td>' + score.score + '</td></tr>';
+        previousKey ? $("#" + previousKey).after(newRow) : tableBody.prepend(newRow);
+    }
+
+    function removeBestScore(score, key){
+        $("#" + key).remove();
+    }
+
+    registerForNLowestScores(6, addBestScore, removeBestScore);
+
+    $("#scorecard").on("blur","[name^='hole']",function(){
+        validHole($(this));
+    });
+
+    $("#scorecard").on("blur","[name^='player']",function(){
+        validPlayer($(this));
+    });
 
     $("#scorecard").on("keyup","[name^='hole']",function(){
         var thisScore = $(this).val();
@@ -89,61 +135,10 @@
         totalScore($(this));
     });
 
-    function generateScoreTable(jsonData){
-        var html = '<h2>Best Scores</h2><table class="score-table"><thead><tr><th></th><th colspan="9">Holes</th><th></th><tr><th>Player</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>Total</th></tr><tbody>',
-            thisResult;
-        for (var prop in jsonData) {
-            if (jsonData.hasOwnProperty(prop)) {
-                thisResult = jsonData[prop];
-                html += '<tr><td>' + thisResult.name + '</td>';
-                for(var j = 0;j<thisResult.holes.length;j++){
-                    html += '<td>' + thisResult.holes[j] + '</td>';
-                }
-                html += '<td>' + thisResult.score + '</td></tr>';
-            }
-        }
-        html += '</tbody></table>';
-        $("#top-scores").append(html);
-    }
-
-    function submitScores(){
-        var player,
-            holes = [],
-            total;
-        $("#scorecard").find("tbody").find("tr").each(function(){
-            player = $(this).find("[name^='player']").val();
-            total = $(this).find("[name^='total']").val();
-            $(this).find("[name^='hole']").each(function(){
-                holes.push($(this).val());
-            });
-        });
-    }
-
-    function addBestScore(score, key, previousKey){
-        var tableBody = $("#score-table-body"),
-            newRow = "";
-        newRow = '<tr id="' + key + '"><td>' + score.name + '</td>';
-        for(var j = 0;j<score.holes.length;j++){
-            newRow += '<td>' + score.holes[j] + '</td>';
-        }
-        newRow += '<td>' + score.score + '</td></tr>';
-        if(previousKey){
-            $("#" + previousKey).after(newRow);
-        }
-        else{
-            tableBody.prepend(newRow);
-        }
-    }
-
-    function removeBestScore(score, key){
-        $("#" + key).remove();
-    }
-
-    registerForNLowestScores(2, addBestScore, removeBestScore);
-
     $("#add-player").on("click", function(){
         addPlayer();
     });
+
     // The following needs to be replaced with a validation process which enables the button once the fields are filled
     $("#submit-scores").prop('disabled', false);
     $("#submit-scores").on("click", function(){
@@ -151,8 +146,6 @@
     });
 </script>
 <script>
-    var map,
-        latlngbounds;
     function map_initialize() {
         var icon = {
             path: "M-20,0a20,20 0 1,0 40,0a20,20 0 1,0 -40,0",
@@ -211,7 +204,7 @@
                 latlng: new google.maps.LatLng(-39.0695323,174.1094426)
             }
         ];
-        map = new google.maps.Map(document.getElementById("map-container"), {
+        var map = new google.maps.Map(document.getElementById("map-container"), {
             center: new google.maps.LatLng(0, 0),
             zoom: 0,
             zoomControl: true,
@@ -231,14 +224,14 @@
                 title: golfHoles[i].name
             });
         }
-        latlngbounds = new google.maps.LatLngBounds();
+        var latlngbounds = new google.maps.LatLngBounds();
         for (var i = 0; i < golfHoles.length; i++) {
             latlngbounds.extend(golfHoles[i].latlng);
         }
         map.fitBounds(latlngbounds);
+        google.maps.event.addDomListener(window, "resize", function() {
+            map.fitBounds(latlngbounds);
+        });
     }
     google.maps.event.addDomListener(window, 'load', map_initialize);
-    google.maps.event.addDomListener(window, "resize", function() {
-        map.fitBounds(latlngbounds);
-    });
 </script>
