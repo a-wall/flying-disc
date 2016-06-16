@@ -222,9 +222,9 @@
             player = $(this).find("[name^='player']");
             validPlayer(player) ? score.name = player.val() : valid = false;
             total = $(this).find("[name^='total']");
-            validTotal(total) ? score.score = total.val() : valid = false;
+            validTotal(total) ? score.score = parseInt(total.val()) : valid = false;
             $(this).find("[name^='hole']").each(function(){
-                validHole($(this)) ? score.holes.push($(this).val()) : valid = false;
+                validHole($(this)) ? score.holes.push(parseInt($(this).val())) : valid = false;
             });
             if(valid){
                 recordScore(score);

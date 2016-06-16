@@ -554,6 +554,10 @@ section {
   height: 400px;
 }
 
+#map-container img {
+  filter: saturate(150%) brightness(150%);
+}
+
 #scorecard table {
     border-collapse: collapse;
     width: 100%;
