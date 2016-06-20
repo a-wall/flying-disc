@@ -1,22 +1,11 @@
 <!doctype html>
 <html lang="en">
 @@include('./head.html', {
-    "title" : "Disc Golf - Merrilands"
+    "title" : "Merrilands Disc Golf Park"
 })
 <body>
     @@include('./header.html')
     <main>
-	    <!-- <section id="message">
-	    	<h2>Scores</h2>
-			<form id="score-form">
-				<label for="score">Score</label>
-				<input type="number" id="score" min="9" max="90">
-				<label for="player">Player</label>
-				<input type="text" id="player" maxlength="3">
-				<button type="submit">Submit</button>
-			</form>
-	    </section> -->
-
 	    <section id="scores-section">
 	    	<h2>Scorecard</h2>
 	    	<form id="scorecard">
@@ -82,26 +71,33 @@
 				<tbody id="score-table-body"></tbody>
 			</table>
 		</section>
+		<section>
+	    	<h2>Course</h2>
+	    	<div id="map-container"></div>
+	    </section>
 	    <section>
 	    	<h2>Etiquette</h2>
-	    	<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean id maximus arcu. Sed sagittis metus sed accumsan ornare. Quisque sit amet turpis dui. Sed quis magna est. In libero nisl, sodales sed placerat quis, scelerisque in augue. Nulla hendrerit, orci ac ornare faucibus, lectus quam molestie elit, quis auctor ante felis et erat. Donec interdum pellentesque mi eget mollis.</p>
+	    	<ul>
+	    		<li>Players should watch the other members of their group throw, in order to aid in locating miss throws.</li>
+	    		<li>Assist in the search for lost discs.</li>
+	    		<li>Do your part by picking up litter and encourage others to do the same.</li>
+	    		<li>There are no rules on group sizes. Large groups six or more golfers tend to move slower than smaller groups. Be aware of the groups behind you and give smaller groups the option to play through.</li>
+	    		<li>Some of the terrain on the course is rugged and good footwear is recommended.</li>
+	    	</ul>
+	    	<p>For more info phone: <a href="tel:+64-273736024">027 373 6024</a></p>
 	    </section>
 	    <section>
 	    	<h2>Rules</h2>
 	    	<ul>
-	    		<li>Proin varius tortor a dui egestas hendrerit.</li>
-				<li>Etiam pretium purus quis sapien pellentesque, a imperdiet mi ultricies.</li>
-				<li>Quisque elementum urna et euismod placerat.</li>
-				<li>Curabitur finibus dolor ac varius mattis.</li>
-				<li>Etiam vestibulum nisi ac tortor semper, id vulputate felis cursus.</li>
-				<li>Maecenas et ipsum et nulla bibendum dapibus.</li>
-				<li>Quisque non tellus sed massa porta tempus eu sit amet eros.</li>
-				<li>Quisque facilisis libero in lobortis venenatis.</li>
+	    		<li>Park Patrons <strong>always</strong> have priority. Golfers must wait for other park users to move out of the way before taking a shot. Always let them know of your intentions.</li>
+	    		<li><strong>Safety!!</strong> Always be aware of your surroundings before throwing a disc, leaving room for miss throws.</li>
+	    		<li>Players assume responsibility for any and all damages or liability caused by throws.</li>
+	    		<li>During play the player furthest away should always shoot first.</li>
+	    		<li>Do not throw until the group ahead of you has finished putting and cleared the area.</li>
+	    		<li>All throws on or over the road should be brought back onto the course resulting in a penalty throw.</li>
+	    		<li>The course is closed during special events where there is a conflict.</li>
+	    		<li>All other posted park rules and regulations must be observed at all times.</li>
 			</ul>
-	    </section>
-	    <section>
-	    	<h2>Course</h2>
-	    	<div id="map-container"></div>
 	    </section>
 	</main>
     @@include('./footer.html')

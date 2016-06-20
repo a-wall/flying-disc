@@ -93,9 +93,9 @@
             player = $(this).find("[name^='player']");
             validPlayer(player) ? score.name = player.val() : valid = false;
             total = $(this).find("[name^='total']");
-            validTotal(total) ? score.score = parseInt(total.val()) : valid = false;
+            validTotal(total) ? score.score = parseInt(total.val(),10) : valid = false;
             $(this).find("[name^='hole']").each(function(){
-                validHole($(this)) ? score.holes.push(parseInt($(this).val())) : valid = false;
+                validHole($(this)) ? score.holes.push(parseInt($(this).val(),10)) : valid = false;
             });
             if(valid){
                 recordScore(score);
@@ -146,21 +146,17 @@
     });
 </script>
 <script>
+    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) * 0.75;
+    $('#map-container').css("height", h);
+    var overlay;
+        DiscGolf.prototype = new google.maps.OverlayView();
+
     function map_initialize() {
         var icon = {
-            path: "M-20,0a20,20 0 1,0 40,0a20,20 0 1,0 -40,0",
-            fillColor: '#FF0000',
-            fillOpacity: .6,
-            anchor: new google.maps.Point(0,0),
-            strokeWeight: 0,
-            scale: 1
-        };
-
-        var icon2 = {
             path: "M 94.955,115.832 100,81.939 l -28.54,0 c 0,0 16.175,-24.743233 16.175,-70.983233 l 7.794981,0 0,-10.60221361 L 4.3836797,0 l 0,10.954767 8.6934273,0 c 0,46.24 15.458893,70.983233 15.458893,70.983233 l -28.536,0 0,0.024 5.041,33.869 35.274699,0 0,55.386 19.718155,0.22 0.353554,-55.606 34.567592,0 z",
             fillColor: '#000000',
             fillOpacity: 0.8,
-            anchor: new google.maps.Point(0,0),
+            anchor: new google.maps.Point(50,150),
             strokeWeight: 0.5,
             strokeColor : "#FFFFFF",
             scale: 0.125
@@ -169,41 +165,42 @@
         var golfHoles = [
             {
                 name: "Hole One",
-                latlng: new google.maps.LatLng(-39.0695346,174.1073713)
+                latlng: new google.maps.LatLng(-39.0687623,174.1079113)
             },
             {
                 name: "Hole Two",
-                latlng: new google.maps.LatLng(-39.0701330,174.1083712)
+                latlng: new google.maps.LatLng(-39.0695746,174.1090262)
             },
             {
                 name: "Hole Three",
-                latlng: new google.maps.LatLng(-39.0702351,174.1080711)
+                latlng: new google.maps.LatLng(-39.0698867,174.1088362)
             },
             {
                 name: "Hole Four",
-                latlng: new google.maps.LatLng(-39.0706656,174.1099710)
+                latlng: new google.maps.LatLng(-39.0708156,174.1102806)
             },
             {
                 name: "Hole Five",
-                latlng: new google.maps.LatLng(-39.0702351,174.1089714)
+                latlng: new google.maps.LatLng(-39.0704951,174.1090014)
             },
             {
                 name: "Hole Six",
-                latlng: new google.maps.LatLng(-39.0698767,174.1087862)
+                latlng: new google.maps.LatLng(-39.0710956,174.1094862)
             },
             {
                 name: "Hole Seven",
-                latlng: new google.maps.LatLng(-39.0706606,174.1073717)
+                latlng: new google.maps.LatLng(-39.0715346,174.1100756)
             },
             {
                 name: "Hole Eight",
-                latlng: new google.maps.LatLng(-39.0706656,174.1088686)
-            },
-            {
-                name: "Hole Nine",
-                latlng: new google.maps.LatLng(-39.0695323,174.1094426)
+                latlng: new google.maps.LatLng(-39.0707756,174.1087006)
             }
         ];
+
+        var courseBounds = new google.maps.LatLngBounds(
+            new google.maps.LatLng(-39.0715846, 174.1075813),
+            new google.maps.LatLng(-39.0686023, 174.1106686));
+
         var map = new google.maps.Map(document.getElementById("map-container"), {
             center: new google.maps.LatLng(0, 0),
             zoom: 0,
@@ -216,22 +213,126 @@
             scrollWheel: false,
             mapTypeId: google.maps.MapTypeId.SATELLITE
         });
+
+        var imgsrc = "http://localhost:3000/css/images/overlay.jpg";
+
+        // add overlay to map
+        overlay = new DiscGolf(courseBounds, imgsrc, map);
+
+        // add markers
         for (var i = 0; i < golfHoles.length; i++) {
             new google.maps.Marker({
                 position: golfHoles[i].latlng,
                 map: map,
-                icon: icon2,
+                icon: icon,
                 title: golfHoles[i].name
             });
         }
+        // get bounds of all holes
         var latlngbounds = new google.maps.LatLngBounds();
         for (var i = 0; i < golfHoles.length; i++) {
             latlngbounds.extend(golfHoles[i].latlng);
         }
+        // fit bounds
         map.fitBounds(latlngbounds);
+        // fit bounds on window resize
         google.maps.event.addDomListener(window, "resize", function() {
             map.fitBounds(latlngbounds);
         });
     }
+
+    //overlay constructor
+    function DiscGolf(bounds, image, map) {
+        this.bounds_ = bounds;
+        this.image_ = image;
+        this.map_ = map;
+        this.div_ = null;
+        this.setMap(map);
+    }
+
+    /**
+     * onAdd is called when the map's panes are ready and the overlay has been
+     * added to the map.
+     */
+    /*DiscGolf.prototype.onAdd = function() {
+
+        var div = document.createElement('div');
+        div.setAttribute('id','overlay');
+        div.style.borderStyle = 'none';
+        div.style.borderWidth = '0px';
+        div.style.position = 'absolute';
+
+        // Create the img element and attach it to the div.
+        var img = document.createElement('img');
+        img.src = this.image_;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.position = 'absolute';
+        div.appendChild(img);
+
+        this.div_ = div;
+
+        // Add the element to the "overlayLayer" pane.
+        var panes = this.getPanes();
+        panes.overlayLayer.appendChild(div);
+    };*/
+    // onAdd is called when the map's panes are ready and the overlay has been
+    DiscGolf.prototype.onAdd = function(){
+        var div = document.createElement('div');
+        div.setAttribute('id','overlay');
+        div.style.borderStyle = 'solid';
+        div.style.borderWidth = '1px;';
+        div.style.background = 'none';
+        div.style.position = 'absolute';
+        
+        var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('fill','#FFFFFF');
+        svg.setAttribute('width','100%');
+        svg.setAttribute('height','100%');
+        //svg.setAttribute('viewBox','0 0 400 400');
+        svg.setAttribute('preserveAspectRatio','none');
+        var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+        
+        var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('id','myRect');
+        rect.setAttribute('height','100%');
+        rect.setAttribute('width','100%');
+        rect.setAttribute('y','0');
+        rect.setAttribute('x','0');
+        rect.setAttribute('stroke-width','3');
+        rect.setAttribute('fill','none');
+        rect.setAttribute('stroke','#FF0000');
+        g.appendChild(rect);
+        svg.appendChild(g);
+        div.appendChild(svg);
+        
+        this.div_ = div;
+        
+        var panes = this.getPanes();
+        panes.overlayLayer.appendChild(div);    
+        
+    };
+
+    DiscGolf.prototype.draw = function() {
+        var overlayProjection = this.getProjection();
+
+        var sw = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
+        var ne = overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
+
+        // Resize the image's div to fit the indicated dimensions.
+        var div = this.div_;
+        div.style.left = sw.x + 'px';
+        div.style.top = ne.y + 'px';
+        div.style.width = (ne.x - sw.x) + 'px';
+        div.style.height = (sw.y - ne.y) + 'px';
+    };
+
+    // The onRemove() method will be called automatically from the API if
+    // we ever set the overlay's map property to 'null'.
+    DiscGolf.prototype.onRemove = function() {
+        this.div_.parentNode.removeChild(this.div_);
+        this.div_ = null;
+    };
+
     google.maps.event.addDomListener(window, 'load', map_initialize);
 </script>

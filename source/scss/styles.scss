@@ -1,5 +1,5 @@
 $primary-color-dark:   #00796B;
-$primary-color:        #009688;
+$primary-color:        #00B0A0; //#009688;
 $primary-color-light:  #B2DFDB;
 $primary-color-text:   #FFFFFF;
 $accent-color:         #FF5722;
@@ -555,6 +555,7 @@ section {
 }
 
 #map-container img {
+  -webkit-filter: saturate(150%) brightness(150%);
   filter: saturate(150%) brightness(150%);
 }
 
@@ -661,4 +662,8 @@ background-color: #FFF;
   color: rgba(0, 0, 0, 0.298039);
   background-color: rgb(229, 229, 229);
   box-shadow: none;
+}
+
+#overlay {
+  opacity: 0;
 }
