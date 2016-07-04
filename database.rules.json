@@ -2,6 +2,6 @@
   ".read": true,
   ".write": true,
   "scores": {
-    ".indexOn": "score"
+    ".indexOn": ["score","timeStamp"]
   }
 }
