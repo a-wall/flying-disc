@@ -294,8 +294,6 @@
         $("#scorecard").find("tbody").find("tr").each(function(){
             var result = rowValid($(this),true);
             if(result.valid){
-                thisDate = new Date;
-                result.score.isoDate = thisDate.toISOString();
                 result.score.timeStamp = Date.now();
                 var recorded = recordScore(result.score);
                 // console.log(recorded);
