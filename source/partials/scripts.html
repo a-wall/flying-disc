@@ -4,22 +4,51 @@
 <script src="js/firebase-persistence.js"></script>
 <script>
     window.onerror = function (msg, url, lineNo, columnNo, error) {
-        alert(msg, url, lineNo, columnNo, error);
+        //alert(msg, url, lineNo, columnNo, error);
       return false;
     };
 
-    function addPlayer(){
-        var table = $("#scorecard").find("tbody"),
-            newPlayerNumber = table.find("tr").length + 1,
-            html = "";
-        html += '<tr><td><input id="player' + newPlayerNumber + '" type="text" aria-labelledby="player-label" maxlength="3" name="player-name' + newPlayerNumber + '"></td>';
-        for(var i = 1;i<=9;i++){
-            html += '<td><input type="number" min="1" max="9" aria-labelledby="player' + newPlayerNumber + ' hole-label hole' + i +'" name="hole' + i +'-' + newPlayerNumber + '"></td>';
-        }
-        html += '<td><input type="number" min="9" max="81" aria-labelledby="player' + newPlayerNumber + ' total" readonly name="total-' + newPlayerNumber + '"></td>';
-        table.append(html);
+    var addPlayer = (function () {
+        var counter = 1;
+        return function(){
+            var table = $("#scorecard").find("tbody"),
+                html = "";
+            counter++;
+            html += '<tr><td><button type="button" class="remove-player" aria-labelledby="remove player' + counter + '">&#10799;</button></td><td><input id="player' + counter + '" type="text" aria-labelledby="player-label" maxlength="3" name="player-name' + counter + '"></td>';
+            for(var i = 1;i<=9;i++){
+                html += '<td><input type="number" min="1" max="9" aria-labelledby="player' + counter + ' hole-label hole' + i +'" name="hole' + i +'-' + counter + '"></td>';
+            }
+            html += '<td><input type="number" min="9" max="81" aria-labelledby="player' + counter + ' total" readonly name="total-' + counter + '"></td>';
+            table.append(html);
+        };
+    }());
+
+    function openModal(el){
+        $("#overlay").removeClass("hidden");
+        $("#modal").removeClass("hidden").attr("tabindex","-1").focus();
+        $("main, footer").attr("aria-hidden","true");
+        $("#confirm-delete").one("click",function(){
+            removePlayer(el);
+        });
+        $("#cancel-delete").one("click",function(){
+            closeModal(el);
+        });
+    }
+    function closeModal(el){
+        $("main, footer").attr("aria-hidden","false");
+        $("#overlay").addClass("hidden");
+        $("#modal").addClass("hidden").removeAttr("tabindex");
+        el.focus();
     }
 
+    function removePlayer(el){
+        var nextFocus,
+            parent = el.parents("tbody");
+        el.remove();
+        nextFocus = parent.find(".remove-player");
+        nextFocus = nextFocus.length ? nextFocus : $("#add-player");
+        closeModal(nextFocus);
+    }
     function tintScore(el,score){
         score = parseInt(score,10);
         if(score < 3){
@@ -54,27 +83,29 @@
         }
     }
 
-    function validPlayer(el){
+    function validPlayer(el,flag){
         var pattern = /.+/;
-        return validateField(el,pattern);
+        return validateField(el,pattern,flag);
     }
 
-    function validHole(el){
+    function validHole(el,flag){
         var pattern = /^\d{1}$/;
-        return validateField(el,pattern);
+        return validateField(el,pattern,flag);
     }
 
-    function validTotal(el){
+    function validTotal(el,flag){
         var pattern = /^\d{1,2}$/;
-        return validateField(el,pattern);
+        return validateField(el,pattern,flag);
     }
 
-    function validateField(el,pattern){
+    function validateField(el,pattern,flag){
         var match,
             val = el.val();
         if(typeof val !== "undefined"){
             match = val.match(pattern);
-            match ? el.removeClass("invalid") : el.addClass("invalid");
+            if(flag){
+                match ? el.removeClass("invalid") : el.addClass("invalid");
+            }
         }
         else{
             match = null;
@@ -82,30 +113,58 @@
         return match;
     }
 
+    function submittedRow(row,score){
+        var html = '<td class="success">&check;</td><td class="player-name">' + score.name + '</td>';
+        for(var i = 0;i<score.holes.length;i++){
+            html += '<td>' + score.holes[i] + '</td>';
+        }
+        html += '<td>' + score.score + '</td>';
+        row.addClass("submitted-row").html(html);
+    }
+
+    function rowValid(row,flag){
+        var player,
+            total,
+            thisDate,
+            valid = true,
+            score = {
+                holes : []
+            };
+        player = row.find("[name^='player']");
+        validPlayer(player,flag) ? score.name = player.val() : valid = false;
+        total = row.find("[name^='total']");
+        validTotal(total,flag) ? score.score = parseInt(total.val(),10) : valid = false;
+        row.find("[name^='hole']").each(function(){
+            validHole($(this),flag) ? score.holes.push(parseInt($(this).val(),10)) : valid = false;
+        });
+        return {
+            score : score,
+            valid : valid
+        };
+    }
+
     function submitScores(){
         $("#scorecard").find("tbody").find("tr").each(function(){
-            var player,
-                total,
-                valid = true,
-                score = {
-                    holes : []
-                };
-            player = $(this).find("[name^='player']");
-            validPlayer(player) ? score.name = player.val() : valid = false;
-            total = $(this).find("[name^='total']");
-            validTotal(total) ? score.score = parseInt(total.val(),10) : valid = false;
-            $(this).find("[name^='hole']").each(function(){
-                validHole($(this)) ? score.holes.push(parseInt($(this).val(),10)) : valid = false;
-            });
-            if(valid){
-                recordScore(score);
+            var result = rowValid($(this),true);
+            if(result.valid){
+                thisDate = new Date;
+                result.score.isoDate = thisDate.toISOString();
+                result.score.timeStamp = Date.now();
+                var recorded = recordScore(result.score);
+                // console.log(recorded);
+                submittedRow($(this),result.score);
             }
         });
     }
 
     function addBestScore(score, key, previousKey){
-        var tableBody = $("#score-table-body"),
-            newRow = '<tr id="' + key + '"><td>' + score.name + '</td>';
+        var scoreDate = new Date(score.timeStamp),
+            tableBody = $("#score-table-body"),
+            thisDay = scoreDate.getDate() > 9 ? scoreDate.getDate() : "0" + scoreDate.getDate(),
+            thisMonth = scoreDate.getMonth() > 8 ? scoreDate.getMonth() + 1 : "0" + (scoreDate.getMonth() + 1),
+            thisYear = scoreDate.getFullYear() - 2000,
+            thisDate = thisDay + "/" + thisMonth + "/" +thisYear,
+            newRow = '<tr id="' + key + '"><td>' + score.name + '</td><td class="date-col">' + thisDate + '</td>';
         for(var i = 0;i<score.holes.length;i++){
             newRow += '<td>' + score.holes[i] + '</td>';
         }
@@ -120,27 +179,36 @@
     registerForNLowestScores(6, addBestScore, removeBestScore);
 
     $("#scorecard").on("blur","[name^='hole']",function(){
-        validHole($(this));
+        validHole($(this),true);
     });
 
     $("#scorecard").on("blur","[name^='player']",function(){
-        validPlayer($(this));
+        validPlayer($(this),true);
     });
 
     $("#scorecard").on("keyup","[name^='hole']",function(){
-        var thisScore = $(this).val();
+        var thisScore = $(this).val(),
+            row = $(this).parents("tr"),
+            result;
         if(thisScore !== ""){
             tintScore($(this),thisScore);
         }
         totalScore($(this));
+        result = rowValid(row,false);
+        if(result.valid){
+            $("#submit-scores").prop('disabled', false);
+        }
     });
 
     $("#add-player").on("click", function(){
         addPlayer();
     });
 
-    // The following needs to be replaced with a validation process which enables the button once the fields are filled
-    $("#submit-scores").prop('disabled', false);
+    $(document).on("click",".remove-player",function(){
+        var thisRow = $(this).parents("tr");
+        openModal(thisRow);
+    });
+
     $("#submit-scores").on("click", function(){
         submitScores();
     });
@@ -161,39 +229,47 @@
             strokeColor : "#FFFFFF",
             scale: 0.125
         };
-
+       
         var golfHoles = [
             {
                 name: "Hole One",
-                latlng: new google.maps.LatLng(-39.0687623,174.1079113)
+                content: "<div class='hole-info'><h3>Hole One</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>123m</p></div>",
+                latlng: new google.maps.LatLng(-39.0687723,174.1079413)
             },
             {
                 name: "Hole Two",
-                latlng: new google.maps.LatLng(-39.0695746,174.1090262)
+                content: "<div class='hole-info'><h3>Hole Two</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>141m</p></div>",
+                latlng: new google.maps.LatLng(-39.0696116,174.1090162)
             },
             {
                 name: "Hole Three",
-                latlng: new google.maps.LatLng(-39.0698867,174.1088362)
+                content: "<div class='hole-info'><h3>Hole Three</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>82m</p><h3>Hole Nine</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>66m</p></div>",
+                latlng: new google.maps.LatLng(-39.0698997,174.1088462)
             },
             {
                 name: "Hole Four",
-                latlng: new google.maps.LatLng(-39.0708156,174.1102806)
+                content: "<div class='hole-info'><h3>Hole Four</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>101m</p></div>",
+                latlng: new google.maps.LatLng(-39.0709356,174.1102006)
             },
             {
                 name: "Hole Five",
-                latlng: new google.maps.LatLng(-39.0704951,174.1090014)
+                content: "<div class='hole-info'><h3>Hole Five</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>103m</p></div>",
+                latlng: new google.maps.LatLng(-39.0704951,174.1089414)
             },
             {
                 name: "Hole Six",
-                latlng: new google.maps.LatLng(-39.0710956,174.1094862)
+                content: "<div class='hole-info'><h3>Hole Six</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>78m</p></div>",
+                latlng: new google.maps.LatLng(-39.0712376,174.1095862)
             },
             {
                 name: "Hole Seven",
-                latlng: new google.maps.LatLng(-39.0715346,174.1100756)
+                content: "<div class='hole-info'><h3>Hole Seven</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>55m</p></div>",
+                latlng: new google.maps.LatLng(-39.0715446,174.1098406)
             },
             {
                 name: "Hole Eight",
-                latlng: new google.maps.LatLng(-39.0707756,174.1087006)
+                content: "<div class='hole-info'><h3>Hole Eight</h3><p><strong>Par: </strong>3</p><p><strong>Distance: </strong>85m</p></div>",
+                latlng: new google.maps.LatLng(-39.0707756,174.1086606)
             }
         ];
 
@@ -221,12 +297,20 @@
 
         // add markers
         for (var i = 0; i < golfHoles.length; i++) {
-            new google.maps.Marker({
+            var marker = new google.maps.Marker({
                 position: golfHoles[i].latlng,
                 map: map,
                 icon: icon,
                 title: golfHoles[i].name
             });
+            var infowindow = new google.maps.InfoWindow({
+                content: golfHoles[i].content
+            });
+            google.maps.event.addListener(marker, 'click', (function(marker, infowindow) {
+                return function() {
+                    infowindow.open(map, marker);
+                };
+            })(marker, infowindow));
         }
         // get bounds of all holes
         var latlngbounds = new google.maps.LatLngBounds();
@@ -239,6 +323,8 @@
         google.maps.event.addDomListener(window, "resize", function() {
             map.fitBounds(latlngbounds);
         });
+        // disabled scroll zoom
+        map.set('scrollwheel', false);
     }
 
     //overlay constructor
@@ -250,61 +336,16 @@
         this.setMap(map);
     }
 
-    /**
-     * onAdd is called when the map's panes are ready and the overlay has been
-     * added to the map.
-     */
-    /*DiscGolf.prototype.onAdd = function() {
-
-        var div = document.createElement('div');
-        div.setAttribute('id','overlay');
-        div.style.borderStyle = 'none';
-        div.style.borderWidth = '0px';
-        div.style.position = 'absolute';
-
-        // Create the img element and attach it to the div.
-        var img = document.createElement('img');
-        img.src = this.image_;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.position = 'absolute';
-        div.appendChild(img);
-
-        this.div_ = div;
-
-        // Add the element to the "overlayLayer" pane.
-        var panes = this.getPanes();
-        panes.overlayLayer.appendChild(div);
-    };*/
     // onAdd is called when the map's panes are ready and the overlay has been
     DiscGolf.prototype.onAdd = function(){
         var div = document.createElement('div');
-        div.setAttribute('id','overlay');
-        div.style.borderStyle = 'solid';
-        div.style.borderWidth = '1px;';
+        div.setAttribute('id','map-overlay');
         div.style.background = 'none';
         div.style.position = 'absolute';
         
-        var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        svg.setAttribute('fill','#FFFFFF');
-        svg.setAttribute('width','100%');
-        svg.setAttribute('height','100%');
-        //svg.setAttribute('viewBox','0 0 400 400');
-        svg.setAttribute('preserveAspectRatio','none');
-        var g = document.createElementNS('http://www.w3.org/2000/svg','g');
-        
-        var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
-        rect.setAttribute('id','myRect');
-        rect.setAttribute('height','100%');
-        rect.setAttribute('width','100%');
-        rect.setAttribute('y','0');
-        rect.setAttribute('x','0');
-        rect.setAttribute('stroke-width','3');
-        rect.setAttribute('fill','none');
-        rect.setAttribute('stroke','#FF0000');
-        g.appendChild(rect);
-        svg.appendChild(g);
-        div.appendChild(svg);
+        var el ='<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" viewBox="0 0 1026 1290" preserveAspectRatio="none"><style type="text/css"><![CDATA[ .course { fill: #ffffff; fill-opacity: 0.25; stroke: none; /*stroke-width:2; stroke-linecap:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1*/ } text { font-style:normal; font-variant:normal; font-weight:900; font-stretch:normal; font-size:22.5px; line-height:125%; font-family:Arial; text-align:start; letter-spacing:0px; word-spacing:0px; writing-mode:lr-tb; text-anchor:start; fill:#ffffff; fill-opacity:1; stroke:#000000; stroke-width:1; stroke-linecap:butt; stroke-linejoin:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1; filter:url(#filter4905); } ]]></style><defs><g id="tee"><path style="fill:#FF5722;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 69.491934,-129.69355 -15.491934,0 -15.491934,0 7.745967,-13.4164 L 54,-156.52636 l 7.745967,13.41641 z" id="path6" /><circle style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cx="54.5" cy="-138.13782" r="3.5" id="circle8" /></g><filter style="color-interpolation-filters:sRGB;" inkscape:label="Drop Shadow" id="filter4905"><feFlood flood-opacity="1" flood-color="rgb(0,0,0)" result="flood" id="feFlood4907" /><feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" id="feComposite4909" /><feGaussianBlur in="composite1" stdDeviation="1" result="blur" id="feGaussianBlur4911" /><feOffset dx="4.57967e-015" dy="4.57967e-015" result="offset" id="feOffset4913" /><feComposite in="SourceGraphic" in2="offset" operator="over" result="fbSourceGraphic" id="feComposite4915" /><feColorMatrix result="fbSourceGraphicAlpha" in="fbSourceGraphic" values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0" id="feColorMatrix4917" /><feFlood id="feFlood4919" flood-opacity="1" flood-color="rgb(0,0,0)" result="flood" in="fbSourceGraphic" /><feComposite id="feComposite4921" in2="fbSourceGraphic" in="flood" operator="in" result="composite1" /><feGaussianBlur id="feGaussianBlur4923" in="composite1" stdDeviation="1" result="blur" /><feOffset id="feOffset4925" dx="4.57967e-015" dy="4.57967e-015" result="offset" /><feComposite id="feComposite4927" in2="offset" in="fbSourceGraphic" operator="over" result="composite2" /></filter></defs><g transform="translate(0,237.63782)"><g><path class="course" d="m 116,-179.63782 a 17,17 0 0 0 -17,17 17,17 0 0 0 16.39258,16.9707 c 155.08889,54.97131 295.1615,126.83538 442.9414,190.0293 l 4.33204,-6.33398 C 417.21115,-33.26019 290.60981,-117.44785 126.50781,-175.97766 A 17,17 0 0 0 116,-179.63782 Z" /><path class="course" d="m 56.666016,-140.80384 -4.5,5.16602 C 184.73605,-13.54109 315.34591,102.64558 461.56055,212.92859 A 17,17 0 0 0 474,218.36218 a 17,17 0 0 0 17,-17 17,17 0 0 0 -9.51758,-15.24023 C 332.04593,83.09003 197.31911,-24.90038 56.666016,-140.80384 Z" /><path class="course" d="m 556.66602,39.36218 c -98.9414,106.40665 -138.00075,153.73585 -153.72852,276.14844 -1.26801,2.42323 -1.93264,5.11662 -1.9375,7.85156 0,9.38884 7.61116,17 17,17 9.38884,0 17,-7.61116 17,-17 -0.006,-1.34968 -0.17368,-2.69378 -0.49805,-4.00391 3.5154,-117.92752 35.57515,-166.40815 127.66407,-276.49609 z" /><path class="course" d="M 450.82353,566.36218 A 13.823529,17.703163 0 0 0 437,584.06534 a 13.823529,17.703163 0 0 0 0.84809,6.0631 c 19.26974,115.49571 214.20182,137.93075 349.61904,190.23374 L 789.5,774.63469 C 660.28118,722.91712 490.59604,671.19775 464.55812,582.24906 a 13.823529,17.703163 0 0 0 -13.73459,-15.88688 z" /><path class="course" d="m 463.60627,680.36218 -7.27229,1.09329 c 38.01962,95.69504 99.67337,177.6073 194.97644,234.83215 a 19.524337,15.939571 0 0 0 13.66524,4.57456 A 19.524337,15.939571 0 0 0 684.5,904.92261 19.524337,15.939571 0 0 0 672.86031,890.35281 C 586.15424,843.02344 507.65824,773.03817 463.60627,680.36218 Z" /><path class="course" d="m 901.75676,883.36218 c -15.13045,54.04491 -81.54727,138.09982 -142.54713,135.71722 -5.15738,0.1144 -10.16456,1.0849 -14.47763,2.8061 -0.0907,0.01 -0.18183,0.023 -0.27255,0.031 l 0.0681,0.058 c -7.82086,3.1808 -12.51854,8.5189 -12.52755,14.2355 4e-5,9.4729 12.64414,17.1522 28.24142,17.1522 7.08832,-0.01 13.9136,-1.6311 19.12072,-4.5521 70.19674,-27.063 104.59211,-84.24101 127.97184,-165.61093 z" /><path class="course" d="m 416.29559,309.36218 a 17.204408,16.003552 0 0 0 -16.34261,11.03921 c -79.11822,59.12697 -105.9479,129.58891 -134.78696,253.4901 l 7.08417,0.47069 C 302.64147,478.40344 344.97476,405.47062 420.13021,340.9464 A 17.204408,16.003552 0 0 0 433.5,325.36573 17.204408,16.003552 0 0 0 416.29559,309.36218 Z" /><path class="course" transform="translate(0,-237.63782)" d="M 357.75 924.5 A 14.75 14 0 0 0 343 938.5 A 14.75 14 0 0 0 352.75195 951.65234 C 430.96448 1029.7633 477.78519 1123.1685 526.5 1218 L 533 1214.5 C 483.59349 1115.7398 431.66006 1002.4505 371.98242 934.83398 A 14.75 14 0 0 0 357.75 924.5 z " /><path class="course" d="m 618.16602,476.69616 -5.5,2.16602 c 115.07003,125.59673 147.17989,170.7834 244.89453,302.06641 3.21212,3.45991 7.71837,5.42825 12.43945,5.43359 9.38884,0 17,-7.61116 17,-17 -0.009,-6.47862 -3.70024,-12.38872 -9.51758,-15.24023 C 785.54593,644.59003 733.31911,596.59962 618.16602,476.69616 Z" /></g><use xlink:href="#tee" id="tee2" /><use xlink:href="#tee" id="tee3" transform="translate(505 179)" /><use xlink:href="#tee" id="tee4" transform="translate(562,617)" /><use xlink:href="#tee" id="tee5" transform="translate(736,919)" /><use xlink:href="#tee" id="tee6" transform="translate(407,825)" /><use xlink:href="#tee" id="tee7" transform="translate(850 1021)" /><use xlink:href="#tee" id="tee8" transform="translate(474,1116)" /><use xlink:href="#tee" id="tee9" transform="translate(214,709)" /><text x="562" y="32.362183"><tspan>1/3</tspan></text><text y="-149.63782" x="62"><tspan>2</tspan></text><text x="624" y="472.36218"><tspan>4</tspan></text><text y="680.36218" x="438"><tspan>6</tspan></text><text x="246" y="564.36218"><tspan>9</tspan></text><text x="798" y="772.36218"><tspan>5</tspan></text><text y="874.36218" x="910"><tspan>7</tspan></text><text x="536" y="970.36218"><tspan>8</tspan></text></g></svg>';
+
+        $(div).append(el);
         
         this.div_ = div;
         

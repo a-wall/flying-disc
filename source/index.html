@@ -1,104 +1,111 @@
 <!doctype html>
 <html lang="en">
 @@include('./head.html', {
-    "title" : "Merrilands Disc Golf Park"
+    "title" : "Merrilands Disc Golf"
 })
 <body>
     @@include('./header.html')
     <main>
-	    <section id="scores-section">
-	    	<h2>Scorecard</h2>
-	    	<form id="scorecard">
-	    		<button id="add-player" type="button">Add player</button>
-	    		<table role="presentation">
-	    			<colgroup>
-	    				<col class="player-name">
-	    				<col>
-	    				<col>
-	    				<col>
-	    				<col>
-	    				<col>
-	    				<col>
-	    				<col>
-	    				<col>
-	    				<col>
-	    				<col class="total">
-	    			</colgroup>
-	    			<thead>
-	    				<tr>
-	    					<th></th>
-	    					<th colspan="9"><span id="hole-label">Hole</span>s</th>
-	    					<th></th>
-	    				<tr>
-	    					<th id="player-label">Player</th>
-							<th id="hole1">1</th>
-							<th id="hole2">2</th>
-							<th id="hole3">3</th>
-							<th id="hole4">4</th>
-							<th id="hole5">5</th>
-							<th id="hole6">6</th>
-							<th id="hole7">7</th>
-							<th id="hole8">8</th>
-							<th id="hole9">9</th>
-							<th id="total">Total</th>
-						</tr>
-					<tbody>
-						<tr>
-							<td><input id="player1" type="text" aria-labelledby="player-label" maxlength="3" name="player-name1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole1" name="hole1-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole2" name="hole2-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole3" name="hole3-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole4" name="hole4-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole5" name="hole5-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole6" name="hole6-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole7" name="hole7-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole8" name="hole8-1"></td>
-							<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole9" name="hole9-1"></td>
-							<td><input type="number" min="9" max="81" aria-labelledby="player1 total" readonly name="total-1"></td>
-						</tr>
-					</tbody>
+    	<div class="row">
+		    <section id="scores-section" class="col">
+		    	<h2>Scorecard</h2>
+		    	<form id="scorecard" class="scorecard">
+		    		<table role="presentation">
+		    			<colgroup>
+		    				<col class="remove-col">
+		    				<col class="player-name">
+		    				<col>
+		    				<col>
+		    				<col>
+		    				<col>
+		    				<col>
+		    				<col>
+		    				<col>
+		    				<col>
+		    				<col>
+		    				<col class="total">
+		    			</colgroup>
+		    			<thead>
+		    				<tr>
+		    					<th></th>
+		    					<th></th>
+		    					<th colspan="9"><span id="hole-label">Hole</span>s</th>
+		    					<th></th>
+		    				<tr>
+		    					<th id="remove"><span class="sr-only">Remove</span></th>
+		    					<th id="player-label">Player</th>
+								<th id="hole1">1</th>
+								<th id="hole2">2</th>
+								<th id="hole3">3</th>
+								<th id="hole4">4</th>
+								<th id="hole5">5</th>
+								<th id="hole6">6</th>
+								<th id="hole7">7</th>
+								<th id="hole8">8</th>
+								<th id="hole9">9</th>
+								<th id="total">Total</th>
+							</tr>
+						<tbody>
+							<tr>
+								<td><button type="button" class="remove-player" aria-labelledby="remove player1">&#10799;</button></td>
+								<td><input id="player1" type="text" aria-labelledby="player-label" maxlength="3" name="player-name1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole1" name="hole1-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole2" name="hole2-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole3" name="hole3-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole4" name="hole4-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole5" name="hole5-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole6" name="hole6-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole7" name="hole7-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole8" name="hole8-1"></td>
+								<td><input type="number" min="1" max="9" aria-labelledby="player1 hole-label hole9" name="hole9-1"></td>
+								<td><input type="number" min="9" max="81" aria-labelledby="player1 total" readonly name="total-1"></td>
+							</tr>
+						</tbody>
+					</table>
+					<button id="add-player" type="button">Add player</button>
+					<button id="submit-scores" type="button" disabled>Submit scores</button>
+				</form>
+			</section>
+			<section id="top-scores" class="col">
+				<h2>Best Scores</h2>
+				<table class="score-table">
+					<thead>
+						<tr><th></th><th class="date-col"></th><th colspan="9">Holes</th><th></th></tr>
+						<tr><th>Player</th><th class="date-col">Date</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>Total</th></tr>
+					</thead>
+					<tbody id="score-table-body"></tbody>
 				</table>
-				<button id="submit-scores" type="button" disabled>Submit scores</button>
-			</form>
-		</section>
-		<section id="top-scores">
-			<h2>Best Scores</h2>
-			<table class="score-table">
-				<thead>
-					<tr><th></th><th colspan="9">Holes</th><th></th></tr>
-					<tr><th>Player</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>Total</th></tr>
-				</thead>
-				<tbody id="score-table-body"></tbody>
-			</table>
-		</section>
-		<section>
-	    	<h2>Course</h2>
+			</section>
+		</div>
+		<section class="map-section">
+	    	<h2 class="sr-only">Course</h2>
 	    	<div id="map-container"></div>
 	    </section>
-	    <section>
-	    	<h2>Etiquette</h2>
-	    	<ul>
-	    		<li>Players should watch the other members of their group throw, in order to aid in locating miss throws.</li>
-	    		<li>Assist in the search for lost discs.</li>
-	    		<li>Do your part by picking up litter and encourage others to do the same.</li>
-	    		<li>There are no rules on group sizes. Large groups six or more golfers tend to move slower than smaller groups. Be aware of the groups behind you and give smaller groups the option to play through.</li>
-	    		<li>Some of the terrain on the course is rugged and good footwear is recommended.</li>
-	    	</ul>
-	    	<p>For more info phone: <a href="tel:+64-273736024">027 373 6024</a></p>
-	    </section>
-	    <section>
-	    	<h2>Rules</h2>
-	    	<ul>
-	    		<li>Park Patrons <strong>always</strong> have priority. Golfers must wait for other park users to move out of the way before taking a shot. Always let them know of your intentions.</li>
-	    		<li><strong>Safety!!</strong> Always be aware of your surroundings before throwing a disc, leaving room for miss throws.</li>
-	    		<li>Players assume responsibility for any and all damages or liability caused by throws.</li>
-	    		<li>During play the player furthest away should always shoot first.</li>
-	    		<li>Do not throw until the group ahead of you has finished putting and cleared the area.</li>
-	    		<li>All throws on or over the road should be brought back onto the course resulting in a penalty throw.</li>
-	    		<li>The course is closed during special events where there is a conflict.</li>
-	    		<li>All other posted park rules and regulations must be observed at all times.</li>
-			</ul>
-	    </section>
+	    <div class="row">
+	    	<section class="col">
+		    	<h2>Rules</h2>
+		    	<ul>
+		    		<li>Park Patrons <strong>always</strong> have priority. Golfers must wait for other park users to move out of the way before taking a shot. Always let them know of your intentions.</li>
+		    		<li><strong>Safety!!</strong> Always be aware of your surroundings before throwing a disc, leaving room for miss throws.</li>
+		    		<li>Players assume responsibility for any and all damages or liability caused by throws.</li>
+		    		<li>During play the player furthest away should always shoot first.</li>
+		    		<li>Do not throw until the group ahead of you has finished putting and cleared the area.</li>
+		    		<li>All throws on or over the road should be brought back onto the course resulting in a penalty throw.</li>
+		    		<li>The course is closed during special events where there is a conflict.</li>
+		    		<li>All other posted park rules and regulations must be observed at all times.</li>
+				</ul>
+		    </section>
+		    <section class="col">
+		    	<h2>Etiquette</h2>
+		    	<ul>
+		    		<li>Players should watch the other members of their group throw, in order to aid in locating miss throws.</li>
+		    		<li>Assist in the search for lost discs.</li>
+		    		<li>Do your part by picking up litter and encourage others to do the same.</li>
+		    		<li>There are no rules on group sizes. Large groups six or more golfers tend to move slower than smaller groups. Be aware of the groups behind you and give smaller groups the option to play through.</li>
+		    		<li>Some of the terrain on the course is rugged and good footwear is recommended.</li>
+		    	</ul>
+		    </section>
+		</div>
 	</main>
     @@include('./footer.html')
     @@include('./scripts.html')
