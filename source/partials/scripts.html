@@ -14,7 +14,7 @@
             var table = $("#scorecard").find("tbody"),
                 html = "";
             counter++;
-            html += '<tr><td><button type="button" class="remove-player" aria-labelledby="remove player' + counter + '">&#10799;</button></td><td><input id="player' + counter + '" type="text" aria-labelledby="player-label" maxlength="3" name="player-name' + counter + '"></td>';
+            html += '<tr><td><button type="button" class="remove-player" aria-labelledby="remove player' + counter + '">&#10060;</button></td><td><input id="player' + counter + '" type="text" aria-labelledby="player-label" maxlength="3" name="player-name' + counter + '"></td>';
             for(var i = 1;i<=9;i++){
                 html += '<td><input type="number" min="1" max="9" aria-labelledby="player' + counter + ' hole-label hole' + i +'" name="hole' + i +'-' + counter + '"></td>';
             }
