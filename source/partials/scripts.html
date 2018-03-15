@@ -174,7 +174,7 @@
         $("#" + key).remove();
     }
 
-    registerForNLowestScores(6, addBestScore, removeBestScore);
+    registerForNLowestScores(20, addBestScore, removeBestScore);
 
     $("#scorecard").on("blur","[name^='hole']",function(){
         validHole($(this),true);
